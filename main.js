@@ -19,7 +19,7 @@ app.on('ready', function(){
     mainWindow = new BrowserWindow({});
     // load html window
     mainWindow.loadURL(url.format({
-        pathname: path.join(__dirname, 'mainWindow.html'),
+        pathname: path.join(__dirname, './pages/mainWindow.html'),
         protocol: 'file',
         slashes: true
     }));
@@ -52,7 +52,7 @@ function createAddWindow(){
     });
     // load html window
     addWindow.loadURL(url.format({
-        pathname: path.join(__dirname, 'addWindow.html'),
+        pathname: path.join(__dirname, './pages/addWindow.html'),
         protocol: 'file',
         slashes: true
     }));
