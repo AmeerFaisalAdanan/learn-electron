@@ -5,7 +5,7 @@ const path = require('path')
 
 
 
-const {app, BrowserWindow, Menu} = electron;
+const {app, BrowserWindow, Menu, ipcMain} = electron;
 
 
 let mainWindow;
@@ -23,6 +23,15 @@ app.on('ready', function(){
         protocol: 'file',
         slashes: true
     }));
+
+    // quit app when close 
+
+    mainWindow.on('closed', function()
+    {
+        app.quit();
+    });
+
+
     // build menu from template
     const mainMenu = Menu.buildFromTemplate(mainMenuTemplate);
     Menu.setApplicationMenu(mainMenu);
@@ -31,12 +40,13 @@ app.on('ready', function(){
 });
 
 
+
 // handle create add window
 
 function createAddWindow(){
     addWindow = new BrowserWindow({
-        width: 200,
-        height: 300,
+        width: 300,
+        height: 200,
         title: 'Add shopping list item'
 
     });
@@ -46,7 +56,22 @@ function createAddWindow(){
         protocol: 'file',
         slashes: true
     }));
+
+    // garbage collection
+    addWindow.on('close', function(){
+        addWindow = null;
+    });
 }
+
+
+
+// catch item add
+
+ipcMain.on('item:add', function(e, item){
+    console.log(item);
+    mainWindow.webContents.send('item:add', item);
+    addWindow.close();
+});
 
 
 // create menu template
@@ -59,11 +84,14 @@ const mainMenuTemplate = [
             {
                 label: 'Add Item',
                 click(){
-                    createAddWindow
+                    createAddWindow();
                 }
             },
             {
-                label: 'Clear Items'
+                label: 'Clear Items',
+                click(){
+                    mainWindow.webContents.send('item:clear');
+                }
             },
             {
                 label: 'Quit',
@@ -76,6 +104,36 @@ const mainMenuTemplate = [
         ]
     }
 ];
+
+
+//if mac, add empty object to menu
+if (process.platform == 'darwin'){
+    mainMenuTemplate.unshift({});
+}
+
+
+//add developer tools item if not in production
+
+if(process.env.NODE_ENV !== 'production')
+{
+    mainMenuTemplate.push(
+        {
+            label: 'Developer Tools',
+            submenu:[
+                {
+                    label: 'Toggle DevTools',
+                    click(site, focusedWindow)
+                    {
+                        focusedWindow.toggleDevTools();
+                    }
+                },
+                {
+                    role: 'reload'
+                }
+            ]
+        }
+    )
+}
 
 
 // add stuff to menu
